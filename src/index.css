@@ -1,1 +1,62 @@
 @import "tailwindcss";
+
+@theme {
+  --color-surface: #131312;
+  --color-surface-dim: #131312;
+  --color-surface-bright: #3a3937;
+  --color-surface-container-lowest: #0e0e0c;
+  --color-surface-container-low: #1c1c1a;
+  --color-surface-container: #20201e;
+  --color-surface-container-high: #2a2a28;
+  --color-surface-container-highest: #353532;
+  --color-on-surface: #e5e2de;
+  --color-on-surface-variant: #dbc1b9;
+  --color-outline: #a38c85;
+  --color-outline-variant: #55433d;
+  --color-primary: #ffb59e;
+  --color-on-primary: #5c1902;
+  --color-primary-container: #d97757;
+  --color-on-primary-container: #541400;
+  --color-secondary: #ffb59d;
+  --color-on-secondary: #581e08;
+  --color-secondary-container: #75331c;
+  --color-on-secondary-container: #fa9e7f;
+  --color-tertiary: #f9b984;
+  --color-on-tertiary: #4c2700;
+  --color-tertiary-container: #bf8655;
+  --color-on-tertiary-container: #442200;
+  --color-tertiary-fixed-dim: #f9b984;
+  --color-primary-fixed-dim: #ffb59e;
+  --color-error: #ffb4ab;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+
+  --font-body-md: 'Geist', sans-serif;
+  --font-body-lg: 'Geist', sans-serif;
+  --font-body-sm: 'Geist', sans-serif;
+  --font-headline-sm: 'Geist', sans-serif;
+  --font-headline-md: 'Geist', sans-serif;
+  --font-headline-lg: 'Newsreader', serif;
+  --font-display-lg: 'Newsreader', serif;
+  --font-code-md: 'JetBrains Mono', monospace;
+  --font-code-sm: 'JetBrains Mono', monospace;
+  --font-code-lg: 'JetBrains Mono', monospace;
+  --font-label-sm: 'JetBrains Mono', monospace;
+  --font-label-md: 'JetBrains Mono', monospace;
+}
+
+@layer base {
+  html, body {
+    margin: 0;
+    padding: 0;
+    background-color: #131312;
+    color: #e5e2de;
+  }
+  body {
+    overscroll-behavior: none;
+  }
+}
+
+::-webkit-scrollbar {
+  display: none;
+}

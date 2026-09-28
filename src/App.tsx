@@ -201,9 +201,9 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-surface text-on-surface flex flex-col font-body-md pl-64 pt-20">
       
-      {/* Header */}
+      {/* Header & Sidebar */}
       <Header
         currentUrlInput={currentUrlInput}
         setCurrentUrlInput={setCurrentUrlInput}
@@ -219,7 +219,7 @@ export default function App() {
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-6">
         
         {errorMessage && (
           <div className="mb-6 bg-red-500/10 border border-red-500/20 rounded-2xl p-4 flex items-center space-x-3 text-red-300">

@@ -44,7 +44,8 @@ README Forge is a powerful, client-side web application designed to audit, rewri
 
 ---
 
-## Tech Stack
+## Design System & Aesthetic
+- **GitRead / README Forge Warm Editorial Terminal**: Built with an organic academic research publication meets precision CLI terminal aesthetic. Features warm espresso surfaces (`#131312`), terracotta accents (`#d97757`), Newsreader editorial typography for headings, Geist for system discourse, and JetBrains Mono for operational CLI output.
 
 - **React 19** + **TypeScript** + **Vite**
 - **Tailwind CSS v4** for styling
