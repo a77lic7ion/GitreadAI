@@ -1,0 +1,7 @@
+{
+  "name": "README Forge",
+  "description": "Audit, rewrite, and generate stellar READMEs and repository documentation using AI and deterministic checks.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
