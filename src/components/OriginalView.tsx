@@ -45,68 +45,65 @@ export const OriginalView: React.FC<OriginalViewProps> = ({
     a.click();
   };
 
-  // Render marked HTML securely
   const sanitizedHtml = DOMPurify.sanitize(marked.parse(readmeContent) as string);
 
   return (
     <div className="space-y-6">
       
       {/* Repository Metadata Banner */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+      <div className="bg-surface-container-low border border-surface-container-highest rounded-lg p-6 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           
           <div>
-            <div className="flex items-center space-x-2 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1">
+            <div className="flex items-center space-x-2 text-primary-container text-xs font-semibold uppercase tracking-wider mb-1 font-label-sm">
               <BookOpen className="w-4 h-4" />
               <span>Repository Overview</span>
             </div>
-            <h1 className="text-2xl font-bold text-white">
+            <h1 className="text-2xl font-normal text-on-surface font-headline-lg">
               {metadata.owner}/{metadata.repo}
             </h1>
-            <p className="text-slate-400 text-sm mt-1 max-w-3xl">
+            <p className="text-on-surface-variant text-sm mt-1 max-w-3xl font-body-md">
               {metadata.description || 'No repository description provided.'}
             </p>
           </div>
 
           {/* Stats Badges */}
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-300">
-              <Star className="w-3.5 h-3.5 text-amber-400" />
-              <span className="font-semibold text-white">{metadata.stars.toLocaleString()}</span>
-              <span className="text-slate-500">stars</span>
+            <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-surface-container-lowest border border-surface-container-highest rounded text-xs text-on-surface-variant font-label-sm">
+              <Star className="w-3.5 h-3.5 text-tertiary" />
+              <span className="font-semibold text-on-surface">{metadata.stars.toLocaleString()}</span>
+              <span className="text-outline">stars</span>
             </div>
 
-            <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-300">
-              <GitFork className="w-3.5 h-3.5 text-indigo-400" />
-              <span className="font-semibold text-white">{metadata.forks.toLocaleString()}</span>
-              <span className="text-slate-500">forks</span>
+            <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-surface-container-lowest border border-surface-container-highest rounded text-xs text-on-surface-variant font-label-sm">
+              <GitFork className="w-3.5 h-3.5 text-primary-container" />
+              <span className="font-semibold text-on-surface">{metadata.forks.toLocaleString()}</span>
+              <span className="text-outline">forks</span>
             </div>
 
-            <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-300">
+            <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-surface-container-lowest border border-surface-container-highest rounded text-xs text-on-surface-variant font-label-sm">
               <AlertCircle className="w-3.5 h-3.5 text-pink-400" />
-              <span className="font-semibold text-white">{metadata.openIssues.toLocaleString()}</span>
-              <span className="text-slate-500">issues</span>
+              <span className="font-semibold text-on-surface">{metadata.openIssues.toLocaleString()}</span>
+              <span className="text-outline">issues</span>
             </div>
 
-            <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-300">
+            <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-surface-container-lowest border border-surface-container-highest rounded text-xs text-on-surface-variant font-label-sm">
               <Code className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-white font-medium">{metadata.language}</span>
+              <span className="text-on-surface font-medium">{metadata.language}</span>
             </div>
 
-            <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-300">
+            <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-surface-container-lowest border border-surface-container-highest rounded text-xs text-on-surface-variant font-label-sm">
               <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
-              <span className="text-white font-medium">{metadata.license || 'No License'}</span>
+              <span className="text-on-surface font-medium">{metadata.license || 'No License'}</span>
             </div>
           </div>
-
         </div>
 
-        {/* Topics / Tags */}
         {metadata.topics && metadata.topics.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 mt-4 pt-4 border-t border-slate-800/80">
-            <span className="text-xs text-slate-500 font-medium mr-2">Topics:</span>
+          <div className="mt-4 pt-4 border-t border-surface-container-highest flex flex-wrap items-center gap-1.5">
+            <span className="text-xs text-outline font-label-sm mr-2">TOPICS:</span>
             {metadata.topics.map(topic => (
-              <span key={topic} className="px-2.5 py-0.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 rounded-full text-xs">
+              <span key={topic} className="px-2.5 py-0.5 bg-surface-container text-on-surface-variant rounded text-xs font-code-sm border border-surface-container-highest">
                 {topic}
               </span>
             ))}
@@ -114,71 +111,64 @@ export const OriginalView: React.FC<OriginalViewProps> = ({
         )}
       </div>
 
-      {/* README Document Container */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+      {/* README Viewer Container */}
+      <div className="bg-surface-container-low border border-surface-container-highest rounded-lg shadow-sm overflow-hidden flex flex-col">
         
-        {/* Document Toolbar */}
-        <div className="flex items-center justify-between px-6 py-3.5 bg-slate-950/60 border-b border-slate-800">
-          <div className="flex items-center space-x-2 text-sm font-semibold text-slate-200">
-            <FileCode className="w-4 h-4 text-indigo-400" />
-            <span>{readmePath}</span>
+        {/* Toolbar */}
+        <div className="bg-surface-container-high px-4 py-3 flex items-center justify-between border-b border-surface-container-highest">
+          <div className="flex items-center space-x-1">
+            <button
+              onClick={() => setViewMode('preview')}
+              className={`px-3.5 py-1.5 rounded text-xs font-semibold flex items-center space-x-1.5 transition-all font-label-md ${
+                viewMode === 'preview'
+                  ? 'bg-surface-container-lowest text-on-surface shadow-sm border border-surface-container-highest'
+                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'
+              }`}
+            >
+              <Eye className="w-4 h-4 text-primary-container" />
+              <span>Rendered Preview</span>
+            </button>
+            <button
+              onClick={() => setViewMode('raw')}
+              className={`px-3.5 py-1.5 rounded text-xs font-semibold flex items-center space-x-1.5 transition-all font-label-md ${
+                viewMode === 'raw'
+                  ? 'bg-surface-container-lowest text-on-surface shadow-sm border border-surface-container-highest'
+                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'
+              }`}
+            >
+              <FileCode className="w-4 h-4 text-tertiary" />
+              <span>Raw Markdown</span>
+            </button>
           </div>
 
-          <div className="flex items-center space-x-3">
-            {/* Toggle Preview / Raw */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-0.5 flex items-center space-x-1">
-              <button
-                onClick={() => setViewMode('preview')}
-                className={`flex items-center space-x-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                  viewMode === 'preview'
-                    ? 'bg-indigo-600 text-white shadow'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <Eye className="w-3.5 h-3.5" />
-                <span>Rendered</span>
-              </button>
-
-              <button
-                onClick={() => setViewMode('raw')}
-                className={`flex items-center space-x-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                  viewMode === 'raw'
-                    ? 'bg-indigo-600 text-white shadow'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <Code className="w-3.5 h-3.5" />
-                <span>Raw Markdown</span>
-              </button>
-            </div>
-
+          <div className="flex items-center space-x-2">
+            <span className="text-xs text-outline font-code-sm hidden sm:inline">Path: {readmePath || 'README.md'}</span>
             <button
               onClick={handleCopy}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-medium transition-colors"
+              className="px-3 py-1.5 bg-surface-container hover:bg-surface-container-high border border-surface-container-highest text-on-surface rounded text-xs font-semibold flex items-center space-x-1.5 transition-all"
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-outline" />}
               <span>{copied ? 'Copied' : 'Copy'}</span>
             </button>
-
             <button
               onClick={handleDownload}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-medium transition-colors"
+              className="px-3 py-1.5 bg-primary-container hover:bg-tertiary-container text-on-primary-container rounded text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm"
             >
-              <Download className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Download</span>
+              <Download className="w-3.5 h-3.5" />
+              <span>Download .md</span>
             </button>
           </div>
         </div>
 
-        {/* Document Content */}
-        <div className="p-6 md:p-10">
+        {/* Content Body */}
+        <div className="p-8 bg-surface-container-lowest overflow-x-auto min-h-[450px]">
           {viewMode === 'preview' ? (
-            <article 
-              className="prose prose-invert max-w-none prose-indigo prose-headings:border-b prose-headings:border-slate-800 prose-headings:pb-2 prose-pre:bg-slate-950 prose-pre:border prose-pre:border-slate-800"
+            <div 
+              className="prose prose-invert max-w-none font-body-md text-on-surface space-y-4"
               dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
             />
           ) : (
-            <pre className="p-4 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-300 font-mono overflow-x-auto whitespace-pre-wrap">
+            <pre className="font-code-md text-code-md text-on-surface whitespace-pre-wrap leading-relaxed">
               {readmeContent}
             </pre>
           )}

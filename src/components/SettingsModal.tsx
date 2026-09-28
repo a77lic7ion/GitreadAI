@@ -72,7 +72,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   const handleDeleteProvider = (id: string) => {
     if (activeSettings.providers.length <= 1) {
-      alert('You must keep at least one LLM provider.');
+      alert('You must keep at least one provider.');
       return;
     }
     const filtered = activeSettings.providers.filter(p => p.id !== id);
@@ -115,29 +115,29 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       model = 'mistral-small-latest';
       type = 'openai';
     } else if (presetType === 'opencode') {
-      name = 'OpenCode';
+      name = 'OpenCode Interpreter';
       baseUrl = 'https://api.opencode.ai/v1';
-      model = 'opencode-coder';
+      model = 'opencode-coder-v1';
       type = 'openai';
     } else if (presetType === 'ollama') {
       name = 'Ollama (Local)';
       baseUrl = 'http://localhost:11434/v1';
-      model = 'llama3:8b';
-      type = 'ollama';
+      model = 'llama3';
+      type = 'openai';
+    } else if (presetType === 'gemini') {
+      name = 'Google Gemini (OpenAI Proxy)';
+      baseUrl = 'https://generativelanguage.googleapis.com/v1beta/openai/';
+      model = 'gemini-2.5-flash';
+      type = 'openai';
     } else if (presetType === 'openai') {
       name = 'OpenAI';
       baseUrl = 'https://api.openai.com/v1';
       model = 'gpt-4o';
       type = 'openai';
     } else if (presetType === 'anthropic') {
-      name = 'Anthropic Direct';
+      name = 'Anthropic Proxy';
       baseUrl = 'https://api.anthropic.com/v1';
-      model = 'claude-3-5-sonnet-20241022';
-      type = 'anthropic';
-    } else if (presetType === 'gemini') {
-      name = 'Google Gemini (OpenAI Proxy)';
-      baseUrl = 'https://generativelanguage.googleapis.com/v1beta/openai/';
-      model = 'gemini-2.5-flash';
+      model = 'claude-3-5-sonnet';
       type = 'openai';
     }
 
@@ -150,47 +150,45 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     setTestResult(null);
     try {
       const res = await testLLMConnection(currentProvider);
-      setTestResult({ success: res.success, message: res.message });
+      setTestResult(res);
     } catch (err: any) {
-      setTestResult({ success: false, message: err.message || 'Test failed' });
+      setTestResult({ success: false, message: err.message || 'Connection failed' });
     } finally {
       setIsTesting(false);
     }
   };
 
-  const handleFetchModelsAction = async () => {
+  const handleFetchModels = async () => {
     if (!currentProvider) return;
     setIsFetchingModels(true);
     try {
       const models = await fetchProviderModels(currentProvider);
+      setFetchedModels(models);
       if (models.length > 0) {
-        setFetchedModels(models);
-        alert(`Successfully fetched ${models.length} models! Select one from the model dropdown.`);
-        handleUpdateProvider({ model: models[0] });
+        alert(`Successfully fetched ${models.length} models!`);
       } else {
-        alert('No models returned from provider endpoint.');
+        alert('No models returned by provider endpoint.');
       }
-    } catch (e: any) {
-      alert(e.message);
+    } catch (err: any) {
+      alert(`Failed to fetch models: ${err.message}`);
     } finally {
       setIsFetchingModels(false);
     }
   };
 
   const handleExportSettings = () => {
-    const exportData = {
-      ...activeSettings,
-      providers: activeSettings.providers.map(p => ({
-        ...p,
-        apiKey: includeKeysInExport ? p.apiKey : (p.apiKey ? '***REDACTED***' : '')
-      }))
-    };
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'readme-forge-settings.json';
-    a.click();
+    const exportData = { ...activeSettings };
+    if (!includeKeysInExport) {
+      exportData.providers = exportData.providers.map(p => ({ ...p, apiKey: '' }));
+      exportData.githubToken = '';
+    }
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `readme-forge-settings-${Date.now()}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
   };
 
   const handleImportSettings = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -219,42 +217,43 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-container-lowest/80 backdrop-blur-sm p-4 overflow-y-auto">
+      <div className="bg-surface-container-low border border-surface-container-highest rounded-lg w-full max-w-4xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-surface-container-highest bg-surface-container-lowest">
           <div className="flex items-center space-x-2">
-            <Sliders className="w-5 h-5 text-indigo-400" />
-            <h2 className="text-lg font-bold text-white">LLM Provider & Settings Manager</h2>
+            <Sliders className="w-5 h-5 text-primary-container" />
+            <h2 className="text-base font-normal text-on-surface font-headline-lg">LLM Provider & Settings Manager</h2>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+            className="text-on-surface-variant hover:text-on-surface p-1.5 rounded hover:bg-surface-container transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Modal Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-surface-container-lowest">
           
           {/* Security Notice */}
-          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-start space-x-3 text-amber-200 text-xs">
-            <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+          <div className="bg-tertiary/10 border border-tertiary/30 rounded p-4 flex items-start space-x-3 text-tertiary text-xs">
+            <ShieldAlert className="w-5 h-5 text-tertiary shrink-0 mt-0.5" />
             <div>
               <span className="font-semibold block mb-0.5">Client-Side Storage Notice</span>
-              API keys are stored exclusively in your browser's <code className="bg-amber-950/60 px-1 py-0.5 rounded text-amber-300">localStorage</code> and sent directly to your configured LLM endpoints. They never pass through any backend server.
+              API keys are stored exclusively in your browser&apos;s <code className="bg-surface-container px-1 py-0.5 rounded text-on-surface font-code-sm">localStorage</code> and sent directly to your configured LLM endpoints. They never pass through any backend server.
             </div>
           </div>
 
           {/* GitHub Token & Global Prefs */}
-          <div className="bg-slate-950/50 border border-slate-800 rounded-xl p-4 space-y-4">
-            <h3 className="text-sm font-semibold text-white flex items-center space-x-2">
+          <div className="bg-surface-container-low border border-surface-container-highest rounded p-4 space-y-4 shadow-sm">
+            <h3 className="text-sm font-semibold text-on-surface flex items-center space-x-2 font-headline-sm">
               <Key className="w-4 h-4 text-emerald-400" />
               <span>GitHub API Token (Optional)</span>
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-outline">
               Increases rate limits from 60 req/hr to 5,000 req/hr when fetching repository details and raw content.
             </p>
             <input
@@ -262,7 +261,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
               value={activeSettings.githubToken}
               onChange={(e) => setActiveSettings({ ...activeSettings, githubToken: e.target.value })}
-              className="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3.5 py-2 bg-surface-container-lowest border border-surface-container-highest rounded text-xs text-on-surface placeholder-outline focus:outline-none focus:border-primary-container font-code-md"
             />
           </div>
 
@@ -272,10 +271,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {/* Left Column: Providers List */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Providers</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-outline font-label-sm">Providers</span>
                 <button
+                  type="button"
                   onClick={handleAddProvider}
-                  className="flex items-center space-x-1 text-xs text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 px-2.5 py-1 rounded-lg border border-indigo-500/20 transition-colors"
+                  className="flex items-center space-x-1 text-xs text-primary-container hover:text-tertiary bg-surface-container px-2.5 py-1 rounded border border-surface-container-highest transition-colors font-label-md"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add Provider</span>
@@ -289,23 +289,24 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <div
                       key={prov.id}
                       onClick={() => setSelectedProviderId(prov.id)}
-                      className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
+                      className={`p-3 rounded border cursor-pointer transition-all flex items-center justify-between ${
                         isSelected
-                          ? 'bg-indigo-600/10 border-indigo-500 text-white shadow-md'
-                          : 'bg-slate-950/40 border-slate-800 text-slate-300 hover:bg-slate-800/50'
+                          ? 'bg-primary-container/20 border-primary-container text-on-surface shadow-sm'
+                          : 'bg-surface-container-lowest border-surface-container-highest text-on-surface-variant hover:bg-surface-container'
                       }`}
                     >
                       <div className="truncate pr-2">
-                        <div className="text-xs font-semibold truncate">{prov.name}</div>
-                        <div className="text-[10px] text-slate-400 truncate">{prov.model}</div>
+                        <div className="text-xs font-semibold truncate font-code-md">{prov.name}</div>
+                        <div className="text-[10px] text-outline truncate font-code-sm">{prov.model}</div>
                       </div>
                       {activeSettings.providers.length > 1 && (
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDeleteProvider(prov.id);
                           }}
-                          className="text-slate-500 hover:text-red-400 p-1 rounded transition-colors"
+                          className="text-outline hover:text-red-400 p-1 rounded transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -316,15 +317,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
 
               {/* Role Assignment */}
-              <div className="pt-4 border-t border-slate-800 space-y-3">
-                <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Role Routing</span>
+              <div className="pt-4 border-t border-surface-container-highest space-y-3">
+                <span className="text-xs font-semibold uppercase tracking-wider text-outline font-label-sm">Role Routing</span>
                 
                 <div>
-                  <label className="block text-[11px] text-slate-400 mb-1">Analysis Provider</label>
+                  <label className="block text-[11px] text-outline mb-1 font-label-sm">Analysis Provider</label>
                   <select
                     value={activeSettings.activeAnalysisProviderId}
                     onChange={(e) => setActiveSettings({ ...activeSettings, activeAnalysisProviderId: e.target.value })}
-                    className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white"
+                    className="w-full px-3 py-1.5 bg-surface-container-lowest border border-surface-container-highest rounded text-xs text-on-surface font-code-md"
                   >
                     {activeSettings.providers.map(p => (
                       <option key={p.id} value={p.id}>{p.name} ({p.model})</option>
@@ -333,11 +334,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-[11px] text-slate-400 mb-1">Rewrite Provider</label>
+                  <label className="block text-[11px] text-outline mb-1 font-label-sm">Rewrite Provider</label>
                   <select
                     value={activeSettings.activeRewriteProviderId}
                     onChange={(e) => setActiveSettings({ ...activeSettings, activeRewriteProviderId: e.target.value })}
-                    className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white"
+                    className="w-full px-3 py-1.5 bg-surface-container-lowest border border-surface-container-highest rounded text-xs text-on-surface font-code-md"
                   >
                     {activeSettings.providers.map(p => (
                       <option key={p.id} value={p.id}>{p.name} ({p.model})</option>
@@ -350,20 +351,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
             {/* Right Columns: Current Provider Config Editor */}
             {currentProvider && (
-              <div className="md:col-span-2 space-y-4 bg-slate-950/50 border border-slate-800 rounded-xl p-5">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                  <h3 className="text-sm font-bold text-white flex items-center space-x-2">
-                    <Sparkles className="w-4 h-4 text-indigo-400" />
+              <div className="md:col-span-2 space-y-4 bg-surface-container-low border border-surface-container-highest rounded p-5 shadow-sm">
+                <div className="flex items-center justify-between pb-3 border-b border-surface-container-highest">
+                  <h3 className="text-sm font-semibold text-on-surface flex items-center space-x-2 font-headline-sm">
+                    <Sparkles className="w-4 h-4 text-primary-container" />
                     <span>Configure: {currentProvider.name}</span>
                   </h3>
 
                   {/* Presets dropdown */}
                   <div className="flex items-center space-x-1">
-                    <span className="text-[10px] text-slate-400 hidden sm:inline">Presets:</span>
+                    <span className="text-[10px] text-outline hidden sm:inline font-label-sm">Presets:</span>
                     <select
                       onChange={(e) => applyPreset(e.target.value as any)}
                       defaultValue=""
-                      className="px-2.5 py-1 bg-slate-900 border border-slate-800 rounded-lg text-[11px] text-indigo-300 focus:outline-none"
+                      className="px-2.5 py-1 bg-surface-container-lowest border border-surface-container-highest rounded text-[11px] text-tertiary focus:outline-none font-code-sm"
                     >
                       <option value="" disabled>Select Preset...</option>
                       <option value="openrouter">OpenRouter (Free Models)</option>
@@ -380,135 +381,126 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Provider Label</label>
+                    <label className="block text-xs font-medium text-outline mb-1 font-label-sm">Provider Label</label>
                     <input
                       type="text"
                       value={currentProvider.name}
                       onChange={(e) => handleUpdateProvider({ name: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 bg-surface-container-lowest border border-surface-container-highest rounded text-xs text-on-surface focus:outline-none focus:border-primary-container font-code-md"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">API Type</label>
+                    <label className="block text-xs font-medium text-outline mb-1 font-label-sm">API Type</label>
                     <select
                       value={currentProvider.type}
                       onChange={(e) => handleUpdateProvider({ type: e.target.value as any })}
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 bg-surface-container-lowest border border-surface-container-highest rounded text-xs text-on-surface focus:outline-none focus:border-primary-container font-code-md"
                     >
                       <option value="openai">OpenAI Compatible (/chat/completions)</option>
                       <option value="openrouter">OpenRouter</option>
-                      <option value="anthropic">Anthropic (/messages)</option>
-                      <option value="ollama">Ollama Local</option>
                     </select>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">Base URL Endpoint</label>
+                <div className="space-y-1">
+                  <label className="block text-xs font-medium text-outline font-label-sm">API Base URL</label>
                   <input
                     type="text"
                     value={currentProvider.baseUrl}
                     onChange={(e) => handleUpdateProvider({ baseUrl: e.target.value })}
-                    placeholder="https://api.openai.com/v1"
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 bg-surface-container-lowest border border-surface-container-highest rounded text-xs text-on-surface focus:outline-none focus:border-primary-container font-code-md"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">API Key / Secret</label>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-medium text-outline font-label-sm">API Key</label>
+                    {currentProvider.type === 'openrouter' && (
+                      <a 
+                        href="https://openrouter.ai/keys" 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="text-[10px] text-primary-container hover:underline flex items-center space-x-1"
+                      >
+                        <span>Get Free OpenRouter Key</span>
+                        <ExternalLink className="w-2.5 h-2.5" />
+                      </a>
+                    )}
+                  </div>
                   <input
                     type="password"
+                    placeholder="sk-..."
                     value={currentProvider.apiKey}
                     onChange={(e) => handleUpdateProvider({ apiKey: e.target.value })}
-                    placeholder="sk-... (leave blank for local Ollama)"
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 bg-surface-container-lowest border border-surface-container-highest rounded text-xs text-on-surface focus:outline-none focus:border-primary-container font-code-md"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-xs font-medium text-slate-300">Model Selection</label>
-                    <button
-                      onClick={handleFetchModelsAction}
-                      disabled={isFetchingModels}
-                      className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[11px] font-medium transition-colors flex items-center space-x-1"
-                    >
-                      <RefreshCw className={`w-3.5 h-3.5 ${isFetchingModels ? 'animate-spin' : ''}`} />
-                      <span>{isFetchingModels ? 'Fetching...' : 'Fetch Models'}</span>
-                    </button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-medium text-outline font-label-sm">Model ID / Name</label>
+                      <button
+                        type="button"
+                        onClick={handleFetchModels}
+                        disabled={isFetchingModels}
+                        className="text-[10px] text-tertiary hover:underline flex items-center space-x-1"
+                      >
+                        <RefreshCw className={`w-2.5 h-2.5 ${isFetchingModels ? 'animate-spin' : ''}`} />
+                        <span>Fetch Models</span>
+                      </button>
+                    </div>
+                    {fetchedModels.length > 0 ? (
+                      <select
+                        value={currentProvider.model}
+                        onChange={(e) => handleUpdateProvider({ model: e.target.value })}
+                        className="w-full px-3 py-2 bg-surface-container-lowest border border-surface-container-highest rounded text-xs text-on-surface font-code-md"
+                      >
+                        {fetchedModels.map(m => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        value={currentProvider.model}
+                        onChange={(e) => handleUpdateProvider({ model: e.target.value })}
+                        placeholder="e.g. google/gemini-2.5-flash:free"
+                        className="w-full px-3 py-2 bg-surface-container-lowest border border-surface-container-highest rounded text-xs text-on-surface focus:outline-none focus:border-primary-container font-code-md"
+                      />
+                    )}
                   </div>
 
-                  {fetchedModels.length > 0 ? (
-                    <select
-                      value={currentProvider.model}
-                      onChange={(e) => handleUpdateProvider({ model: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-indigo-300 focus:outline-none"
-                    >
-                      {fetchedModels.map(m => (
-                        <option key={m} value={m}>{m} {m.endsWith(':free') ? '✨ [FREE]' : ''}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      value={currentProvider.model}
-                      onChange={(e) => handleUpdateProvider({ model: e.target.value })}
-                      placeholder="e.g. google/gemini-2.5-flash:free or NousResearch/Hermes-3-Llama-3.1-70B"
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
-                  )}
-                  <p className="text-[10px] text-slate-400">
-                    {currentProvider.type === 'openrouter' || currentProvider.baseUrl.includes('openrouter.ai')
-                      ? 'Showing free OpenRouter models.'
-                      : 'Type model name or click "Fetch Models" to load available models from endpoint.'}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 pt-2">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">
-                      Temperature ({currentProvider.temperature})
-                    </label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.05"
-                      value={currentProvider.temperature}
-                      onChange={(e) => handleUpdateProvider({ temperature: parseFloat(e.target.value) })}
-                      className="w-full accent-indigo-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Max Tokens</label>
+                  <div className="space-y-1">
+                    <label className="block text-xs font-medium text-outline font-label-sm">Max Tokens</label>
                     <input
                       type="number"
                       value={currentProvider.maxTokens}
                       onChange={(e) => handleUpdateProvider({ maxTokens: parseInt(e.target.value) || 4096 })}
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none"
+                      className="w-full px-3 py-2 bg-surface-container-lowest border border-surface-container-highest rounded text-xs text-on-surface focus:outline-none focus:border-primary-container font-code-md"
                     />
                   </div>
                 </div>
 
                 {/* Test Connection Button & Result */}
-                <div className="pt-3 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
                   <button
+                    type="button"
                     onClick={handleTestConnection}
                     disabled={isTesting}
-                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded-xl text-xs font-medium transition-colors flex items-center justify-center space-x-2"
+                    className="w-full sm:w-auto px-4 py-2 bg-surface-container hover:bg-surface-container-high border border-surface-container-highest text-on-surface rounded text-xs font-bold transition-all flex items-center justify-center space-x-2"
                   >
-                    {isTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                    <span>Test Connection</span>
+                    <RefreshCw className={`w-3.5 h-3.5 ${isTesting ? 'animate-spin' : ''}`} />
+                    <span>{isTesting ? 'Testing connection...' : 'Test Connection'}</span>
                   </button>
 
                   {testResult && (
-                    <div className={`text-xs p-2.5 rounded-xl border ${
-                      testResult.success 
-                        ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' 
-                        : 'bg-red-500/10 border-red-500/20 text-red-300'
-                    } flex-1 truncate`}>
-                      {testResult.message}
+                    <div className={`text-xs px-3 py-1.5 rounded flex items-center space-x-1.5 ${
+                      testResult.success ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30' : 'bg-red-500/10 text-red-300 border border-red-500/30'
+                    }`}>
+                      {testResult.success ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <X className="w-3.5 h-3.5 text-red-400" />}
+                      <span className="font-code-sm">{testResult.message}</span>
                     </div>
                   )}
                 </div>
@@ -518,29 +510,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
           </div>
 
-          {/* Export / Import Settings */}
-          <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+          {/* Import / Export Settings */}
+          <div className="pt-6 border-t border-surface-container-highest flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center space-x-3">
               <button
+                type="button"
                 onClick={handleExportSettings}
-                className="flex items-center space-x-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-medium transition-colors"
+                className="px-3.5 py-2 bg-surface-container hover:bg-surface-container-high border border-surface-container-highest text-on-surface rounded text-xs font-semibold flex items-center space-x-1.5 transition-all"
               >
-                <Download className="w-4 h-4 text-indigo-400" />
-                <span>Export Settings</span>
+                <Download className="w-3.5 h-3.5" />
+                <span>Export JSON</span>
               </button>
-              
-              <label className="flex items-center space-x-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-medium transition-colors cursor-pointer">
-                <Upload className="w-4 h-4 text-emerald-400" />
-                <span>Import Settings</span>
+
+              <label className="px-3.5 py-2 bg-surface-container hover:bg-surface-container-high border border-surface-container-highest text-on-surface rounded text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer">
+                <Upload className="w-3.5 h-3.5" />
+                <span>Import JSON</span>
                 <input type="file" accept=".json" onChange={handleImportSettings} className="hidden" />
               </label>
 
-              <label className="flex items-center space-x-2 text-xs text-slate-400 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={includeKeysInExport}
+              <label className="flex items-center space-x-2 text-xs text-outline cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={includeKeysInExport} 
                   onChange={(e) => setIncludeKeysInExport(e.target.checked)}
-                  className="rounded border-slate-800 text-indigo-600 focus:ring-0"
+                  className="rounded border-surface-container-highest bg-surface-container text-primary-container focus:ring-0"
                 />
                 <span>Include API keys in export</span>
               </label>
@@ -548,16 +541,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
             <div className="flex items-center space-x-3 w-full sm:w-auto justify-end">
               <button
+                type="button"
                 onClick={onClose}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium transition-colors"
+                className="px-4 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface rounded text-xs font-semibold transition-colors"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleSave}
-                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-600/25 transition-all"
+                className="px-5 py-2 bg-primary-container hover:bg-tertiary-container text-on-primary-container rounded text-xs font-bold shadow-sm transition-all"
               >
-                Save Changes
+                Save Settings
               </button>
             </div>
           </div>
